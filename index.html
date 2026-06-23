@@ -183,7 +183,7 @@ textarea.note:focus { outline: none; border-color: var(--c2); }
 <script>
 const CLIENT_ID = '458667376247-qr2g9rcj25fatmmdlvd49r4ig52nl3ka.apps.googleusercontent.com';
 const SCOPE = 'https://www.googleapis.com/auth/calendar.readonly';
-const SNAP_KEY = 'fos_snapshot_v3_' + new Date().toDateString();
+const SNAP_KEY = 'fos_snapshot_v5_' + new Date().toDateString();
 
 let snapshotCalls = [];
 let eodCalls = [];
@@ -242,15 +242,8 @@ async function autoSnapshot() {
   try {
     const raw = await fetchRaw();
     allEventsToday = raw;
-    // Only take snapshot if not already taken today
-    const existing = sessionStorage.getItem(SNAP_KEY);
-    if (!existing) {
-      const salesEvents = raw.filter(e => e.status !== 'cancelled');
-      snapshotCalls = salesEvents.map(e => Object.assign(parseEvent(e), { included: shouldInclude(e) }));
-      sessionStorage.setItem(SNAP_KEY, JSON.stringify(snapshotCalls));
-    } else {
-      snapshotCalls = JSON.parse(existing);
-    }
+    const salesEvents = raw.filter(e => e.status !== 'cancelled' && shouldInclude(e));
+    snapshotCalls = salesEvents.map(e => parseEvent(e));
     renderMorning();
     updateMorningStats();
     // Auto-populate EOD from snapshot
@@ -265,8 +258,8 @@ async function manualRefresh() {
   try {
     const raw = await fetchRaw();
     allEventsToday = raw;
-    const salesEvents = raw.filter(e => e.status !== 'cancelled');
-    snapshotCalls = salesEvents.map(e => Object.assign(parseEvent(e), { included: shouldInclude(e) }));
+    const salesEvents = raw.filter(e => e.status !== 'cancelled' && shouldInclude(e));
+    snapshotCalls = salesEvents.map(e => parseEvent(e));
     sessionStorage.setItem(SNAP_KEY, JSON.stringify(snapshotCalls));
     renderMorning();
     updateMorningStats();
@@ -547,12 +540,7 @@ function showWarn(msg) { document.getElementById('warn-area').innerHTML = '<div 
 function clearWarn() { document.getElementById('warn-area').innerHTML = ''; }
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-// Check sessionStorage on load in case already authed today
-const cached = sessionStorage.getItem(SNAP_KEY);
-if (cached) {
-  snapshotCalls = JSON.parse(cached);
-  renderMorning();
-}
+// No session storage - fresh pull on each connect
 </script>
 </body>
 </html>
