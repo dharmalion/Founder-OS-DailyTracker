@@ -471,14 +471,16 @@ function updateSummaryPanel() {
   // Slots: count from allEventsToday (all calendar events block slots)
   const mornOpen = allEventsToday.length ? countOpenSlots(allEventsToday, 9, 15) : '—';
   const eveOpen = allEventsToday.length ? countOpenSlots(allEventsToday, 17, 20) : '—';
-  document.getElementById('ep-c1s').textContent = c1s;
-  document.getElementById('ep-c2s').textContent = c2s;
-  document.getElementById('ep-c1l').textContent = liveC1;
-  document.getElementById('ep-c2l').textContent = liveC2;
-  document.getElementById('ep-ns').textContent = ns;
-  document.getElementById('ep-morn').textContent = mornOpen;
-  document.getElementById('ep-eve').textContent = eveOpen;
-  document.getElementById('summary-panel').style.display = 'block';
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  set('ep-c1s', c1s);
+  set('ep-c2s', c2s);
+  set('ep-c1l', liveC1);
+  set('ep-c2l', liveC2);
+  set('ep-ns', ns);
+  set('ep-morn', mornOpen);
+  set('ep-eve', eveOpen);
+  const panel = document.getElementById('summary-panel');
+  if (panel) panel.style.display = 'block';
 }
 
 function renderEOD() {
