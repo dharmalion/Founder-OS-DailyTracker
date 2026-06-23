@@ -5,122 +5,100 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>FounderOS Call Tracker</title>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #f7f6f3; --surface: #fff; --border: #e4e2dc; --border-strong: #c8c5bc;
+  --text: #1a1916; --text-muted: #7a7870;
+  --c1: #5a8a3c; --c1-bg: #eef5e8;
+  --c2: #1a56a0; --c2-bg: #e8f0fb;
+  --maybe: #9b7200; --maybe-bg: #fef9ec;
+  --warn-bg: #fef9ec; --warn-border: #f0d080; --warn-text: #92650a;
+  --info-bg: #f0f4ff; --info-border: #c7d7f5; --info-text: #2a4a9a;
+  --success: #2d6a3f; --radius: 10px; --radius-sm: 6px;
+}
+body { font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; line-height: 1.5; }
+.shell { max-width: 700px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+.topbar { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.75rem; padding-bottom: 1.25rem; border-bottom: 1px solid var(--border); }
+.brand { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; }
+.today-date { font-size: 20px; font-weight: 600; }
+.conn-row { display: flex; align-items: center; gap: 8px; }
+.live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border-strong); flex-shrink: 0; }
+.live-dot.on { background: #3d8b4e; }
+.conn-lbl { font-size: 12px; color: var(--text-muted); }
+.tabs { display: flex; gap: 4px; margin-bottom: 1.75rem; background: var(--border); padding: 3px; border-radius: var(--radius-sm); width: fit-content; }
+.tab { padding: 5px 14px; font-size: 13px; font-weight: 500; border-radius: 4px; cursor: pointer; border: none; background: transparent; color: var(--text-muted); font-family: inherit; }
+.tab.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+.btn { padding: 7px 14px; font-size: 13px; font-weight: 500; border-radius: var(--radius-sm); cursor: pointer; border: 1px solid var(--border-strong); background: var(--surface); color: var(--text); font-family: inherit; }
+.btn:hover { background: var(--bg); }
+.btn-primary { background: var(--text); color: #fff; border-color: var(--text); }
+.btn-primary:hover { background: #333; }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+.link-btn { background: none; border: none; color: var(--c2); font-size: 12px; font-weight: 500; cursor: pointer; font-family: inherit; padding: 0; }
+.link-btn:hover { text-decoration: underline; }
+.warn { background: var(--warn-bg); border: 1px solid var(--warn-border); border-radius: var(--radius-sm); padding: 10px 14px; font-size: 12px; color: var(--warn-text); margin-bottom: 1rem; line-height: 1.6; }
+.info-box { background: var(--info-bg); border: 1px solid var(--info-border); border-radius: var(--radius-sm); padding: 10px 14px; font-size: 12px; color: var(--info-text); margin-bottom: 1rem; line-height: 1.6; }
+.sec-label { font-size: 11px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; }
+.snap-tag { font-size: 11px; font-weight: 500; background: var(--warn-bg); color: var(--warn-text); padding: 3px 9px; border-radius: 20px; border: 1px solid var(--warn-border); }
+.row-between { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
 
-  :root {
-    --bg: #f7f6f3;
-    --surface: #ffffff;
-    --border: #e4e2dc;
-    --border-strong: #c8c5bc;
-    --text: #1a1916;
-    --text-muted: #7a7870;
-    --text-faint: #b0ae a8;
-    --accent: #1a1916;
-    --c1: #3d8b4e;
-    --c1-bg: #edf7ef;
-    --c2: #2563b0;
-    --c2-bg: #ebf2fc;
-    --warning-bg: #fef9ec;
-    --warning-text: #92650a;
-    --success: #2d6a3f;
-    --danger: #b91c1c;
-    --radius: 10px;
-    --radius-sm: 6px;
-  }
+/* Stats grid */
+.stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 1.5rem; }
+.stats-grid.two { grid-template-columns: repeat(2, 1fr); }
+.stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; }
+.stat-n { font-size: 26px; font-weight: 700; line-height: 1; }
+.stat-l { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+.stat-n.c1 { color: var(--c1); }
+.stat-n.c2 { color: var(--c2); }
+.stat-n.slots { color: #555; }
+.divider { height: 1px; background: var(--border); margin: 1.5rem 0; }
 
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    font-size: 14px;
-    line-height: 1.5;
-  }
+/* Call cards */
+.call-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 13px 15px; margin-bottom: 8px; transition: opacity .15s; }
+.call-card.excluded { opacity: .35; }
+.call-inner { display: flex; gap: 11px; align-items: flex-start; }
+.call-check { margin-top: 3px; width: 16px; height: 16px; cursor: pointer; flex-shrink: 0; accent-color: var(--c2); }
+.type-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 7px; }
+.dot-c1 { background: var(--c1); } .dot-c2 { background: var(--c2); } .dot-maybe { background: var(--maybe); } .dot-unknown { background: var(--border-strong); } .dot-noshow { background: #b91c1c; }
+.call-body { flex: 1; min-width: 0; }
+.call-name { font-size: 15px; font-weight: 600; }
+.call-time { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.pill { display: inline-block; font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 20px; margin-top: 5px; }
+.pill-c1 { background: var(--c1-bg); color: var(--c1); }
+.pill-c2 { background: var(--c2-bg); color: var(--c2); }
+.pill-maybe { background: var(--maybe-bg); color: var(--maybe); }
+.pill-unknown { background: var(--bg); color: var(--text-muted); border: 1px solid var(--border); }
+.pill-noshow { background: #fef2f2; color: #b91c1c; }
 
-  .shell {
-    max-width: 680px;
-    margin: 0 auto;
-    padding: 2rem 1.5rem 4rem;
-  }
+/* EOD inputs */
+.name-input { font-size: 15px; font-weight: 600; color: var(--text); background: transparent; border: none; outline: none; width: 100%; font-family: inherit; }
+.name-input:focus { border-bottom: 1.5px solid var(--c2); }
+select.outcome { width: 100%; margin-top: 8px; padding: 6px 8px; font-size: 13px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); color: var(--text); font-family: inherit; }
+select.outcome:focus { outline: none; border-color: var(--c2); }
+textarea.note { width: 100%; margin-top: 6px; padding: 6px 8px; font-size: 13px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); color: var(--text); font-family: inherit; resize: none; line-height: 1.5; }
+textarea.note::placeholder { color: var(--text-muted); }
+textarea.note:focus { outline: none; border-color: var(--c2); }
 
-  /* Header */
-  .topbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 2rem;
-    padding-bottom: 1.25rem;
-    border-bottom: 1px solid var(--border);
-  }
-  .brand { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; }
-  .today-date { font-size: 20px; font-weight: 600; color: var(--text); }
-  .conn-status { display: flex; align-items: center; gap: 8px; }
-  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border-strong); flex-shrink: 0; }
-  .dot.live { background: #3d8b4e; }
-  .conn-label { font-size: 12px; color: var(--text-muted); }
+/* Dropped prompt */
+.dropped-card { background: #fff8f0; border: 1px solid #f5c08a; border-radius: var(--radius); padding: 13px 15px; margin-bottom: 8px; }
+.dropped-name { font-size: 15px; font-weight: 600; margin-bottom: 8px; }
+.dropped-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+.dropped-btn { padding: 5px 12px; font-size: 12px; font-weight: 500; border-radius: var(--radius-sm); cursor: pointer; border: 1px solid #f5c08a; background: #fff; color: #92650a; font-family: inherit; }
+.dropped-btn:hover { background: #fff8f0; }
+.dropped-btn.selected { background: #92650a; color: #fff; border-color: #92650a; }
 
-  /* Tabs */
-  .tabs { display: flex; gap: 4px; margin-bottom: 1.75rem; background: var(--border); padding: 3px; border-radius: var(--radius-sm); width: fit-content; }
-  .tab { padding: 5px 14px; font-size: 13px; font-weight: 500; border-radius: 4px; cursor: pointer; border: none; background: transparent; color: var(--text-muted); transition: all 0.15s; }
-  .tab.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+.report-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; font-family: 'Menlo','Monaco',monospace; font-size: 13px; line-height: 1.8; white-space: pre-wrap; color: var(--text); min-height: 80px; }
+.report-actions { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.copied { font-size: 12px; color: var(--success); opacity: 0; transition: opacity .3s; }
+.action-row { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; align-items: center; }
+.select-hint { font-size: 11px; color: var(--text-muted); }
+.empty { font-size: 13px; color: var(--text-muted); padding: 12px 0; }
 
-  /* Buttons */
-  .btn { padding: 7px 14px; font-size: 13px; font-weight: 500; border-radius: var(--radius-sm); cursor: pointer; border: 1px solid var(--border-strong); background: var(--surface); color: var(--text); font-family: inherit; transition: background 0.12s; }
-  .btn:hover { background: var(--bg); }
-  .btn-primary { background: var(--text); color: #fff; border-color: var(--text); }
-  .btn-primary:hover { background: #333; }
-  .btn-sm { padding: 5px 10px; font-size: 12px; }
-  .link-btn { background: none; border: none; color: var(--c2); font-size: 12px; font-weight: 500; cursor: pointer; font-family: inherit; padding: 0; }
-  .link-btn:hover { text-decoration: underline; }
-
-  /* Warning */
-  .warn { background: var(--warning-bg); border: 1px solid #f0d080; border-radius: var(--radius-sm); padding: 10px 14px; font-size: 12px; color: var(--warning-text); margin-bottom: 1rem; line-height: 1.6; }
-
-  /* Section label */
-  .sec-label { font-size: 11px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; }
-
-  /* Cards */
-  .call-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 8px; }
-  .call-inner { display: flex; gap: 12px; align-items: flex-start; }
-  .type-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 7px; }
-  .dot-c1 { background: var(--c1); }
-  .dot-c2 { background: var(--c2); }
-  .dot-unknown { background: var(--border-strong); }
-  .call-body { flex: 1; min-width: 0; }
-  .call-name { font-size: 15px; font-weight: 600; color: var(--text); }
-  .call-time { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
-  .pill { display: inline-block; font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 20px; margin-top: 5px; }
-  .pill-c1 { background: var(--c1-bg); color: var(--c1); }
-  .pill-c2 { background: var(--c2-bg); color: var(--c2); }
-  .pill-unknown { background: var(--bg); color: var(--text-muted); border: 1px solid var(--border); }
-
-  /* EOD inputs */
-  .name-input { font-size: 15px; font-weight: 600; color: var(--text); background: transparent; border: none; outline: none; width: 100%; font-family: inherit; }
-  .name-input:focus { border-bottom: 1.5px solid var(--c2); }
-  select.outcome { width: 100%; margin-top: 8px; padding: 6px 8px; font-size: 13px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); color: var(--text); font-family: inherit; }
-  select.outcome:focus { outline: none; border-color: var(--c2); }
-  textarea.note { width: 100%; margin-top: 6px; padding: 6px 8px; font-size: 13px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); color: var(--text); font-family: inherit; resize: none; line-height: 1.5; }
-  textarea.note::placeholder { color: var(--text-muted); }
-  textarea.note:focus { outline: none; border-color: var(--c2); }
-
-  /* Stats */
-  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 1.5rem; }
-  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; text-align: center; }
-  .stat-n { font-size: 24px; font-weight: 700; }
-  .stat-l { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
-
-  /* Report */
-  .report-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; font-family: 'Menlo', 'Monaco', monospace; font-size: 13px; line-height: 1.8; white-space: pre-wrap; color: var(--text); min-height: 80px; }
-  .report-actions { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-  .copied { font-size: 12px; color: var(--success); opacity: 0; transition: opacity 0.3s; }
-
-  .divider { height: 1px; background: var(--border); margin: 1.5rem 0; }
-  .row-between { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-  .empty { font-size: 13px; color: var(--text-muted); padding: 12px 0; }
-  .action-row { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
-
-  /* Snapshot tag */
-  .snap-tag { font-size: 11px; font-weight: 500; background: var(--warning-bg); color: var(--warning-text); padding: 3px 9px; border-radius: 20px; border: 1px solid #f0d080; }
+/* Summary panel */
+.summary-panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 1.5rem; }
+.summary-row { display: flex; justify-content: space-between; font-size: 13px; padding: 5px 0; border-bottom: 1px solid var(--border); }
+.summary-row:last-child { border-bottom: none; }
+.summary-label { color: var(--text-muted); }
+.summary-val { font-weight: 600; }
 </style>
 </head>
 <body>
@@ -131,9 +109,9 @@
       <div class="brand">FounderOS · Stefan León</div>
       <div class="today-date" id="date-label"></div>
     </div>
-    <div class="conn-status">
-      <div class="dot" id="conn-dot"></div>
-      <span class="conn-label" id="conn-label">Not connected</span>
+    <div class="conn-row">
+      <div class="live-dot" id="conn-dot"></div>
+      <span class="conn-lbl" id="conn-lbl">Not connected</span>
       <button class="btn btn-primary btn-sm" id="auth-btn" onclick="handleAuth()">Connect Calendar</button>
     </div>
   </div>
@@ -143,37 +121,58 @@
     <button class="tab" onclick="switchTab('eod')">End-of-day report</button>
   </div>
 
-  <!-- MORNING TAB -->
+  <!-- MORNING -->
   <div id="tab-morning">
     <div id="warn-area"></div>
+
+    <!-- Stats -->
+    <div class="stats-grid" id="morning-stats" style="display:none;">
+      <div class="stat"><div class="stat-n c1" id="ms-c1">0</div><div class="stat-l">Call 1s scheduled</div></div>
+      <div class="stat"><div class="stat-n c2" id="ms-c2">0</div><div class="stat-l">Follow-ups scheduled</div></div>
+      <div class="stat"><div class="stat-n slots" id="ms-total">0</div><div class="stat-l">Total call slots</div></div>
+      <div class="stat"><div class="stat-n slots" id="ms-morn">0</div><div class="stat-l">Morning slots open (9–3pm)</div></div>
+      <div class="stat"><div class="stat-n slots" id="ms-eve">0</div><div class="stat-l">Evening slots open (5–8pm)</div></div>
+    </div>
+
     <div class="row-between">
       <div class="sec-label">Today's calls</div>
-      <span class="snap-tag">Read-only snapshot</span>
+      <span class="snap-tag">Auto-snapshot on open</span>
     </div>
     <div id="morning-list"><div class="empty">Connect Google Calendar to load today's calls.</div></div>
     <div class="action-row">
-      <button class="btn btn-sm" id="refresh-btn" onclick="loadEvents()" style="display:none;">Refresh</button>
-      <button class="btn btn-sm btn-primary" id="push-btn" onclick="pushToEOD()" style="display:none;">Use for EOD report →</button>
+      <button class="btn btn-sm" id="refresh-btn" onclick="manualRefresh()" style="display:none;">Refresh</button>
+      <button class="btn btn-sm btn-primary" id="push-btn" onclick="pushToEOD()" style="display:none;">Use checked for EOD report</button>
+      <span class="select-hint" id="select-hint" style="display:none;"></span>
     </div>
   </div>
 
-  <!-- EOD TAB -->
+  <!-- EOD -->
   <div id="tab-eod" style="display:none;">
-    <div class="stats">
-      <div class="stat"><div class="stat-n" id="s-total">0</div><div class="stat-l">Total</div></div>
-      <div class="stat"><div class="stat-n" id="s-c1">0</div><div class="stat-l">Call 1s</div></div>
-      <div class="stat"><div class="stat-n" id="s-c2">0</div><div class="stat-l">Follow-ups</div></div>
-      <div class="stat"><div class="stat-n" id="s-ns">0</div><div class="stat-l">No shows</div></div>
+    <div id="compare-area"></div>
+    <div id="dropped-area"></div>
+
+    <!-- Summary panel -->
+    <div class="summary-panel" id="summary-panel" style="display:none;">
+      <div class="sec-label" style="margin-bottom:10px;">Day at a glance</div>
+      <div class="summary-row"><span class="summary-label">Call 1s scheduled</span><span class="summary-val" id="ep-c1s">—</span></div>
+      <div class="summary-row"><span class="summary-label">Call 1s taken</span><span class="summary-val" id="ep-c1l">—</span></div>
+      <div class="summary-row"><span class="summary-label">Follow-ups scheduled</span><span class="summary-val" id="ep-c2s">—</span></div>
+      <div class="summary-row"><span class="summary-label">Live follow-ups</span><span class="summary-val" id="ep-c2l">—</span></div>
+      <div class="summary-row"><span class="summary-label">No shows</span><span class="summary-val" id="ep-ns">—</span></div>
+      <div class="summary-row"><span class="summary-label">Morning slots open (9–3pm)</span><span class="summary-val" id="ep-morn">—</span></div>
+      <div class="summary-row"><span class="summary-label">Evening slots open (5–8pm)</span><span class="summary-val" id="ep-eve">—</span></div>
     </div>
 
     <div class="row-between">
       <div class="sec-label" style="margin-bottom:0;">Log outcomes</div>
-      <button class="link-btn" onclick="addManual()">+ Add manually</button>
+      <div style="display:flex;gap:12px;align-items:center;">
+        <button class="link-btn" onclick="refreshEOD()">Refresh from calendar</button>
+        <button class="link-btn" onclick="addManual()">+ Add manually</button>
+      </div>
     </div>
     <div id="eod-list"><div class="empty">Push calls from morning snapshot or add manually.</div></div>
 
     <div class="divider"></div>
-
     <div class="report-actions">
       <div class="sec-label" style="margin-bottom:0;">Report output</div>
       <button class="btn btn-sm" onclick="copyReport()">Copy</button>
@@ -183,16 +182,18 @@
   </div>
 
 </div>
-
 <script>
 const CLIENT_ID = '458667376247-qr2g9rcj25fatmmdlvd49r4ig52nl3ka.apps.googleusercontent.com';
 const SCOPE = 'https://www.googleapis.com/auth/calendar.readonly';
+const SNAP_KEY = 'fos_snapshot_' + new Date().toDateString();
 
 let snapshotCalls = [];
 let eodCalls = [];
+let droppedPending = [];
 let token = null;
 let tokenClient = null;
 let gisLoaded = false;
+let allEventsToday = [];
 
 document.getElementById('date-label').textContent = new Date().toLocaleDateString('en-US', {
   weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
@@ -211,45 +212,71 @@ function loadGIS() {
 async function handleAuth() {
   await loadGIS();
   tokenClient = google.accounts.oauth2.initTokenClient({
-    client_id: CLIENT_ID,
-    scope: SCOPE,
+    client_id: CLIENT_ID, scope: SCOPE,
     callback: async (resp) => {
-      if (resp.error) {
-        showWarn('Auth error: ' + resp.error + '. Make sure this file\'s origin is in your Google Cloud authorized origins.');
-        return;
-      }
+      if (resp.error) { showWarn('Auth error: ' + resp.error); return; }
       token = resp.access_token;
-      document.getElementById('conn-dot').classList.add('live');
-      document.getElementById('conn-label').textContent = 'Connected';
+      document.getElementById('conn-dot').classList.add('on');
+      document.getElementById('conn-lbl').textContent = 'Connected';
       document.getElementById('auth-btn').textContent = 'Reconnect';
       document.getElementById('refresh-btn').style.display = 'inline-block';
       document.getElementById('push-btn').style.display = 'inline-block';
-      await loadEvents();
+      document.getElementById('select-hint').style.display = 'inline';
+      await autoSnapshot();
     }
   });
   tokenClient.requestAccessToken({ prompt: 'consent' });
 }
 
-async function loadEvents() {
-  if (!token) return;
-  clearWarn();
-  document.getElementById('morning-list').innerHTML = '<div class="empty">Loading...</div>';
-
+async function fetchRaw() {
   const now = new Date();
   const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0).toISOString();
   const end   = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59).toISOString();
-  const url = `https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${encodeURIComponent(start)}&timeMax=${encodeURIComponent(end)}&singleEvents=true&orderBy=startTime&maxResults=50`;
+  const url = 'https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin='
+    + encodeURIComponent(start) + '&timeMax=' + encodeURIComponent(end)
+    + '&singleEvents=true&orderBy=startTime&maxResults=100';
+  const res = await fetch(url, { headers: { Authorization: 'Bearer ' + token } });
+  if (!res.ok) throw new Error('API error ' + res.status);
+  const data = await res.json();
+  return data.items || [];
+}
 
+// Auto-snapshot: runs once per day on first auth/load
+async function autoSnapshot() {
   try {
-    const res = await fetch(url, { headers: { Authorization: 'Bearer ' + token } });
-    if (!res.ok) { showWarn('Calendar error ' + res.status + ' — try reconnecting.'); return; }
-    const data = await res.json();
-    const items = (data.items || []).filter(e => e.status !== 'cancelled');
-    snapshotCalls = items.map(parseEvent);
+    const raw = await fetchRaw();
+    allEventsToday = raw;
+    // Only take snapshot if not already taken today
+    const existing = sessionStorage.getItem(SNAP_KEY);
+    if (!existing) {
+      const salesEvents = raw.filter(e => e.status !== 'cancelled');
+      snapshotCalls = salesEvents.map(e => Object.assign(parseEvent(e), { included: shouldInclude(e) }));
+      sessionStorage.setItem(SNAP_KEY, JSON.stringify(snapshotCalls));
+    } else {
+      snapshotCalls = JSON.parse(existing);
+    }
     renderMorning();
-  } catch (e) {
-    showWarn('Network error: ' + e.message);
-  }
+    updateMorningStats();
+  } catch(e) { showWarn('Error loading calendar: ' + e.message); }
+}
+
+async function manualRefresh() {
+  try {
+    const raw = await fetchRaw();
+    allEventsToday = raw;
+    const salesEvents = raw.filter(e => e.status !== 'cancelled');
+    snapshotCalls = salesEvents.map(e => Object.assign(parseEvent(e), { included: shouldInclude(e) }));
+    sessionStorage.setItem(SNAP_KEY, JSON.stringify(snapshotCalls));
+    renderMorning();
+    updateMorningStats();
+  } catch(e) { showWarn('Refresh error: ' + e.message); }
+}
+
+function shouldInclude(e) {
+  // Default include for sales-looking events, exclude obvious non-sales
+  const title = (e.summary || '').toLowerCase();
+  const blocked = ['block','training','workshop','lunch','break','admin','review','team','standup','1:1','sync'];
+  return !blocked.some(b => title.includes(b));
 }
 
 function parseEvent(e) {
@@ -264,84 +291,215 @@ function parseEvent(e) {
   if (!name) name = e.summary || 'Unknown';
 
   const colorId = String(e.colorId || '');
-  const c1Colors = ['5', '2', '4', '10'];
-  const c2Colors = ['1', '7', '9', '6'];
-  const type = c1Colors.includes(colorId) ? 'c1' : c2Colors.includes(colorId) ? 'c2' : 'unknown';
+  const selfA = (e.attendees || []).find(a => a.self);
+  const selfRsvp = selfA ? selfA.responseStatus : 'accepted';
 
-  let time = '';
+  let type;
+  if (selfRsvp === 'tentative') type = 'maybe';
+  else if (colorId === '') type = 'c1';
+  else if (colorId === '9') type = 'c2';
+  else type = 'unknown';
+
+  let startDt = null, endDt = null, time = '';
   if (e.start && e.start.dateTime) {
-    const s = new Date(e.start.dateTime);
-    const en = new Date(e.end.dateTime);
-    time = s.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
-         + ' – ' + en.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    startDt = new Date(e.start.dateTime);
+    endDt = new Date(e.end.dateTime);
+    time = startDt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+         + ' - ' + endDt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
   }
 
-  return { id: e.id, name, title: e.summary || '', time, type, outcome: '', notes: '', manual: false };
+  let autoOutcome = '';
+  if (selfRsvp === 'declined') autoOutcome = 'No show';
+  if (selfRsvp === 'tentative') autoOutcome = 'Reschedule pending';
+
+  return {
+    id: e.id, name, title: e.summary || '', time, type,
+    selfRsvp, startDt: startDt ? startDt.toISOString() : null,
+    endDt: endDt ? endDt.toISOString() : null,
+    outcome: autoOutcome, notes: '', manual: false
+  };
+}
+
+function countOpenSlots(events, fromH, toH) {
+  // Count 1-hour blocks in range with no event overlapping
+  let open = 0;
+  for (let h = fromH; h < toH; h++) {
+    const slotStart = h * 60;
+    const slotEnd = (h + 1) * 60;
+    const blocked = events.some(e => {
+      if (!e.start || !e.start.dateTime) return false;
+      const eS = new Date(e.start.dateTime);
+      const eE = new Date(e.end.dateTime);
+      const eStart = eS.getHours() * 60 + eS.getMinutes();
+      const eEnd = eE.getHours() * 60 + eE.getMinutes();
+      return eStart < slotEnd && eEnd > slotStart;
+    });
+    if (!blocked) open++;
+  }
+  return open;
+}
+
+function updateMorningStats() {
+  const salesCalls = snapshotCalls.filter(c => c.type !== 'unknown');
+  const c1 = salesCalls.filter(c => c.type === 'c1').length;
+  const c2 = salesCalls.filter(c => c.type === 'c2').length;
+  const total = salesCalls.length;
+  const mornOpen = countOpenSlots(allEventsToday, 9, 15);
+  const eveOpen = countOpenSlots(allEventsToday, 17, 20);
+  document.getElementById('ms-c1').textContent = c1;
+  document.getElementById('ms-c2').textContent = c2;
+  document.getElementById('ms-total').textContent = total;
+  document.getElementById('ms-morn').textContent = mornOpen;
+  document.getElementById('ms-eve').textContent = eveOpen;
+  document.getElementById('morning-stats').style.display = 'grid';
 }
 
 function renderMorning() {
   const el = document.getElementById('morning-list');
-  if (!snapshotCalls.length) {
-    el.innerHTML = '<div class="empty">No events found today.</div>';
-    return;
-  }
-  el.innerHTML = snapshotCalls.map(c => `
-    <div class="call-card">
-      <div class="call-inner">
-        <div class="type-dot ${c.type === 'c1' ? 'dot-c1' : c.type === 'c2' ? 'dot-c2' : 'dot-unknown'}"></div>
-        <div class="call-body">
-          <div class="call-name">${esc(c.name)}</div>
-          <div class="call-time">${esc(c.time)}${c.title && c.title !== c.name ? ' · ' + esc(c.title) : ''}</div>
-          <span class="pill ${c.type === 'c1' ? 'pill-c1' : c.type === 'c2' ? 'pill-c2' : 'pill-unknown'}">
-            ${c.type === 'c1' ? 'Call 1' : c.type === 'c2' ? 'Follow-up' : 'Untagged'}
-          </span>
-        </div>
-      </div>
-    </div>`).join('');
+  if (!snapshotCalls.length) { el.innerHTML = '<div class="empty">No events found today.</div>'; return; }
+  updateSelectHint();
+  el.innerHTML = snapshotCalls.map((c, i) =>
+    '<div class="call-card ' + (c.included ? '' : 'excluded') + '" id="mc-' + i + '">' +
+    '<div class="call-inner">' +
+    '<input type="checkbox" class="call-check" ' + (c.included ? 'checked' : '') + ' onchange="toggleInclude(' + i + ',this.checked)" />' +
+    '<div class="type-dot ' + dotClass(c.type) + '"></div>' +
+    '<div class="call-body">' +
+    '<div class="call-name">' + esc(c.name) + '</div>' +
+    '<div class="call-time">' + esc(c.time) + (c.title && c.title !== c.name ? ' · ' + esc(c.title) : '') + '</div>' +
+    '<span class="pill ' + pillClass(c.type) + '">' + typeLabel(c.type) + '</span>' +
+    (c.selfRsvp === 'tentative' ? ' <span class="pill pill-maybe">Reschedule pending</span>' : '') +
+    '</div></div></div>'
+  ).join('');
+}
+
+function toggleInclude(i, val) {
+  snapshotCalls[i].included = val;
+  const card = document.getElementById('mc-' + i);
+  if (card) card.classList.toggle('excluded', !val);
+  updateSelectHint();
+}
+
+function updateSelectHint() {
+  const n = snapshotCalls.filter(c => c.included).length;
+  document.getElementById('select-hint').textContent = n + ' of ' + snapshotCalls.length + ' selected';
 }
 
 function pushToEOD() {
-  eodCalls = snapshotCalls.map(c => ({ ...c }));
+  eodCalls = snapshotCalls.filter(c => c.included).map(c => Object.assign({}, c));
   switchTab('eod');
+}
+
+async function refreshEOD() {
+  if (!token) { showWarn('Connect calendar first.'); return; }
+  try {
+    const raw = await fetchRaw();
+    allEventsToday = raw;
+    const fresh = raw.filter(e => e.status !== 'cancelled').map(parseEvent);
+    const freshMap = {};
+    fresh.forEach(c => { freshMap[c.id] = c; });
+    const freshIds = new Set(fresh.map(c => c.id));
+
+    // Find dropped
+    const snapshotIncluded = snapshotCalls.filter(c => c.included);
+    droppedPending = snapshotIncluded.filter(c => !freshIds.has(c.id) && !eodCalls.find(e => e.id === c.id && e.outcome));
+
+    // Update existing EOD entries
+    eodCalls = eodCalls.map(c => {
+      if (freshMap[c.id]) {
+        const f = freshMap[c.id];
+        if (f.type === 'noshow' && !c.outcome) c.outcome = 'No show';
+        if (f.selfRsvp === 'tentative' && !c.outcome) c.outcome = 'Reschedule pending';
+      } else if (!c.outcome) {
+        // gone from calendar — will be handled in dropped
+      }
+      return c;
+    });
+
+    // Update slot counts
+    const mornOpen = countOpenSlots(allEventsToday, 9, 15);
+    const eveOpen = countOpenSlots(allEventsToday, 17, 20);
+    document.getElementById('ep-morn').textContent = mornOpen;
+    document.getElementById('ep-eve').textContent = eveOpen;
+
+    updateSummaryPanel();
+    renderDropped();
+    renderEOD();
+  } catch(e) { showWarn('Refresh error: ' + e.message); }
+}
+
+function renderDropped() {
+  const area = document.getElementById('dropped-area');
+  if (!droppedPending.length) { area.innerHTML = ''; return; }
+  area.innerHTML = '<div class="sec-label" style="margin-bottom:10px;">Dropped from calendar — what happened?</div>' +
+    droppedPending.map((c, i) =>
+      '<div class="dropped-card">' +
+      '<div class="dropped-name">' + esc(c.name) + ' <span style="font-size:12px;font-weight:400;color:var(--text-muted);">' + esc(c.time) + '</span></div>' +
+      '<div class="dropped-btns">' +
+      '<button class="dropped-btn" onclick="resolveDropped(' + i + ',\'No show\')">No show</button>' +
+      '<button class="dropped-btn" onclick="resolveDropped(' + i + ',\'Rescheduled\')">Rescheduled to another day</button>' +
+      '<button class="dropped-btn" onclick="resolveDropped(' + i + ',\'Cancelled\')">Cancelled</button>' +
+      '</div></div>'
+    ).join('');
+}
+
+function resolveDropped(i, outcome) {
+  const c = droppedPending[i];
+  // Check if already in eodCalls
+  const exists = eodCalls.find(e => e.id === c.id);
+  if (exists) {
+    exists.outcome = outcome;
+  } else {
+    eodCalls.push(Object.assign({}, c, { outcome: outcome }));
+  }
+  droppedPending.splice(i, 1);
+  renderDropped();
+  updateSummaryPanel();
+  renderEOD();
+}
+
+function updateSummaryPanel() {
+  const snap = snapshotCalls.filter(c => c.included);
+  const c1s = snap.filter(c => c.type === 'c1').length;
+  const c2s = snap.filter(c => c.type === 'c2').length;
+  const liveC1 = eodCalls.filter(c => c.type === 'c1' && c.outcome && c.outcome !== 'No show' && c.outcome !== 'Rescheduled' && c.outcome !== 'Reschedule pending' && c.outcome !== 'Cancelled').length;
+  const liveC2 = eodCalls.filter(c => c.type === 'c2' && c.outcome && c.outcome !== 'No show' && c.outcome !== 'Rescheduled' && c.outcome !== 'Reschedule pending' && c.outcome !== 'Cancelled').length;
+  const ns = eodCalls.filter(c => c.outcome === 'No show').length;
+  document.getElementById('ep-c1s').textContent = c1s;
+  document.getElementById('ep-c2s').textContent = c2s;
+  document.getElementById('ep-c1l').textContent = liveC1;
+  document.getElementById('ep-c2l').textContent = liveC2;
+  document.getElementById('ep-ns').textContent = ns;
+  document.getElementById('summary-panel').style.display = 'block';
 }
 
 function renderEOD() {
   updateStats();
   const el = document.getElementById('eod-list');
-  if (!eodCalls.length) {
-    el.innerHTML = '<div class="empty">Push calls from morning snapshot or add manually.</div>';
-    generateReport(); return;
-  }
-  el.innerHTML = eodCalls.map((c, i) => `
-    <div class="call-card">
-      <div class="call-inner">
-        <div class="type-dot ${c.type === 'c1' ? 'dot-c1' : c.type === 'c2' ? 'dot-c2' : 'dot-unknown'}" style="margin-top:8px;"></div>
-        <div class="call-body">
-          <input class="name-input" value="${esc(c.name)}" placeholder="Prospect name" oninput="upd(${i},'name',this.value)" />
-          <div class="call-time">${esc(c.time)}</div>
-          <select class="outcome" onchange="upd(${i},'outcome',this.value)">
-            <option value="">— Select outcome —</option>
-            ${['Closed','Soft commit','Follow-up scheduled','No show','Rescheduled','DQ','Nurturing','Discovery complete','Pitched'].map(o =>
-              `<option value="${o}" ${c.outcome===o?'selected':''}>${o}</option>`).join('')}
-          </select>
-          <textarea class="note" rows="2" placeholder="One-liner note..." oninput="upd(${i},'notes',this.value)">${esc(c.notes)}</textarea>
-        </div>
-      </div>
-    </div>`).join('');
+  if (!eodCalls.length) { el.innerHTML = '<div class="empty">Push calls from morning snapshot or add manually.</div>'; generateReport(); return; }
+  const outcomes = ['Closed','Soft commit','Follow-up scheduled','No show','Rescheduled','Reschedule pending','Cancelled','DQ','Nurturing','Discovery complete','Pitched'];
+  el.innerHTML = eodCalls.map((c, i) => {
+    const opts = outcomes.map(o => '<option value="' + o + '" ' + (c.outcome === o ? 'selected' : '') + '>' + o + '</option>').join('');
+    return '<div class="call-card">' +
+      '<div class="call-inner">' +
+      '<div class="type-dot ' + dotClass(c.type) + '" style="margin-top:8px;"></div>' +
+      '<div class="call-body">' +
+      '<input class="name-input" value="' + esc(c.name) + '" placeholder="Prospect name" oninput="upd(' + i + ',\'name\',this.value)" />' +
+      '<div class="call-time">' + esc(c.time) + '</div>' +
+      '<select class="outcome" onchange="upd(' + i + ',\'outcome\',this.value)"><option value="">— Select outcome —</option>' + opts + '</select>' +
+      '<textarea class="note" rows="2" placeholder="One-liner note..." oninput="upd(' + i + ',\'notes\',this.value)">' + esc(c.notes) + '</textarea>' +
+      '</div></div></div>';
+  }).join('');
   generateReport();
 }
 
-function upd(i, f, v) { eodCalls[i][f] = v; updateStats(); generateReport(); }
+function upd(i, f, v) { eodCalls[i][f] = v; updateStats(); updateSummaryPanel(); generateReport(); }
 
 function updateStats() {
-  document.getElementById('s-total').textContent = eodCalls.length;
-  document.getElementById('s-c1').textContent = eodCalls.filter(c => c.type === 'c1').length;
-  document.getElementById('s-c2').textContent = eodCalls.filter(c => c.type === 'c2').length;
-  document.getElementById('s-ns').textContent = eodCalls.filter(c => c.outcome === 'No show').length;
+  document.getElementById('s-total') && (document.getElementById('s-total').textContent = eodCalls.length);
 }
 
 function addManual() {
-  eodCalls.push({ id: 'M' + Date.now(), name: '', title: '', time: '', type: 'unknown', outcome: '', notes: '', manual: true });
+  eodCalls.push({ id: 'M' + Date.now(), name: '', title: '', time: '', type: 'unknown', selfRsvp: 'accepted', outcome: '', notes: '', manual: true });
   renderEOD();
 }
 
@@ -349,9 +507,9 @@ function generateReport() {
   const box = document.getElementById('report-out');
   if (!eodCalls.length) { box.textContent = 'No calls to report.'; return; }
   const lines = eodCalls.map(c => {
-    const name = c.name || '[Name]';
+    const name = '*' + (c.name || '[Name]') + '*';
     const out = c.outcome || '[Outcome]';
-    return c.notes ? `${name} - ${out} - ${c.notes}` : `${name} - ${out}`;
+    return c.notes ? name + ' - ' + out + ' - ' + c.notes : name + ' - ' + out;
   });
   box.textContent = 'Conversation Notes\n' + lines.join('\n');
 }
@@ -360,7 +518,7 @@ function copyReport() {
   navigator.clipboard.writeText(document.getElementById('report-out').textContent).then(() => {
     const m = document.getElementById('copied-msg');
     m.style.opacity = '1';
-    setTimeout(() => m.style.opacity = '0', 2000);
+    setTimeout(() => { m.style.opacity = '0'; }, 2000);
   });
 }
 
@@ -368,12 +526,22 @@ function switchTab(t) {
   document.getElementById('tab-morning').style.display = t === 'morning' ? 'block' : 'none';
   document.getElementById('tab-eod').style.display = t === 'eod' ? 'block' : 'none';
   document.querySelectorAll('.tab').forEach((el, i) => el.classList.toggle('active', (i===0&&t==='morning')||(i===1&&t==='eod')));
-  if (t === 'eod') renderEOD();
+  if (t === 'eod') { updateSummaryPanel(); renderEOD(); }
 }
 
-function showWarn(msg) { document.getElementById('warn-area').innerHTML = `<div class="warn">${msg}</div>`; }
+function dotClass(t) { return {c1:'dot-c1',c2:'dot-c2',maybe:'dot-maybe',noshow:'dot-noshow'}[t]||'dot-unknown'; }
+function pillClass(t) { return {c1:'pill-c1',c2:'pill-c2',maybe:'pill-maybe',noshow:'pill-noshow'}[t]||'pill-unknown'; }
+function typeLabel(t) { return {c1:'Call 1',c2:'Follow-up',maybe:'Maybe',noshow:'No show'}[t]||'Untagged'; }
+function showWarn(msg) { document.getElementById('warn-area').innerHTML = '<div class="warn">' + msg + '</div>'; }
 function clearWarn() { document.getElementById('warn-area').innerHTML = ''; }
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// Check sessionStorage on load in case already authed today
+const cached = sessionStorage.getItem(SNAP_KEY);
+if (cached) {
+  snapshotCalls = JSON.parse(cached);
+  renderMorning();
+}
 </script>
 </body>
 </html>
