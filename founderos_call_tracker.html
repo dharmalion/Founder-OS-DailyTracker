@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FounderOS Call Tracker</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f7f6f3;
+    --surface: #ffffff;
+    --border: #e4e2dc;
+    --border-strong: #c8c5bc;
+    --text: #1a1916;
+    --text-muted: #7a7870;
+    --text-faint: #b0ae a8;
+    --accent: #1a1916;
+    --c1: #3d8b4e;
+    --c1-bg: #edf7ef;
+    --c2: #2563b0;
+    --c2-bg: #ebf2fc;
+    --warning-bg: #fef9ec;
+    --warning-text: #92650a;
+    --success: #2d6a3f;
+    --danger: #b91c1c;
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .shell {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+  }
+
+  /* Header */
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 2rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .brand { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; }
+  .today-date { font-size: 20px; font-weight: 600; color: var(--text); }
+  .conn-status { display: flex; align-items: center; gap: 8px; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border-strong); flex-shrink: 0; }
+  .dot.live { background: #3d8b4e; }
+  .conn-label { font-size: 12px; color: var(--text-muted); }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 4px; margin-bottom: 1.75rem; background: var(--border); padding: 3px; border-radius: var(--radius-sm); width: fit-content; }
+  .tab { padding: 5px 14px; font-size: 13px; font-weight: 500; border-radius: 4px; cursor: pointer; border: none; background: transparent; color: var(--text-muted); transition: all 0.15s; }
+  .tab.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+
+  /* Buttons */
+  .btn { padding: 7px 14px; font-size: 13px; font-weight: 500; border-radius: var(--radius-sm); cursor: pointer; border: 1px solid var(--border-strong); background: var(--surface); color: var(--text); font-family: inherit; transition: background 0.12s; }
+  .btn:hover { background: var(--bg); }
+  .btn-primary { background: var(--text); color: #fff; border-color: var(--text); }
+  .btn-primary:hover { background: #333; }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+  .link-btn { background: none; border: none; color: var(--c2); font-size: 12px; font-weight: 500; cursor: pointer; font-family: inherit; padding: 0; }
+  .link-btn:hover { text-decoration: underline; }
+
+  /* Warning */
+  .warn { background: var(--warning-bg); border: 1px solid #f0d080; border-radius: var(--radius-sm); padding: 10px 14px; font-size: 12px; color: var(--warning-text); margin-bottom: 1rem; line-height: 1.6; }
+
+  /* Section label */
+  .sec-label { font-size: 11px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; }
+
+  /* Cards */
+  .call-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 8px; }
+  .call-inner { display: flex; gap: 12px; align-items: flex-start; }
+  .type-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 7px; }
+  .dot-c1 { background: var(--c1); }
+  .dot-c2 { background: var(--c2); }
+  .dot-unknown { background: var(--border-strong); }
+  .call-body { flex: 1; min-width: 0; }
+  .call-name { font-size: 15px; font-weight: 600; color: var(--text); }
+  .call-time { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .pill { display: inline-block; font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 20px; margin-top: 5px; }
+  .pill-c1 { background: var(--c1-bg); color: var(--c1); }
+  .pill-c2 { background: var(--c2-bg); color: var(--c2); }
+  .pill-unknown { background: var(--bg); color: var(--text-muted); border: 1px solid var(--border); }
+
+  /* EOD inputs */
+  .name-input { font-size: 15px; font-weight: 600; color: var(--text); background: transparent; border: none; outline: none; width: 100%; font-family: inherit; }
+  .name-input:focus { border-bottom: 1.5px solid var(--c2); }
+  select.outcome { width: 100%; margin-top: 8px; padding: 6px 8px; font-size: 13px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); color: var(--text); font-family: inherit; }
+  select.outcome:focus { outline: none; border-color: var(--c2); }
+  textarea.note { width: 100%; margin-top: 6px; padding: 6px 8px; font-size: 13px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); color: var(--text); font-family: inherit; resize: none; line-height: 1.5; }
+  textarea.note::placeholder { color: var(--text-muted); }
+  textarea.note:focus { outline: none; border-color: var(--c2); }
+
+  /* Stats */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 1.5rem; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; text-align: center; }
+  .stat-n { font-size: 24px; font-weight: 700; }
+  .stat-l { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+  /* Report */
+  .report-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; font-family: 'Menlo', 'Monaco', monospace; font-size: 13px; line-height: 1.8; white-space: pre-wrap; color: var(--text); min-height: 80px; }
+  .report-actions { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .copied { font-size: 12px; color: var(--success); opacity: 0; transition: opacity 0.3s; }
+
+  .divider { height: 1px; background: var(--border); margin: 1.5rem 0; }
+  .row-between { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .empty { font-size: 13px; color: var(--text-muted); padding: 12px 0; }
+  .action-row { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+
+  /* Snapshot tag */
+  .snap-tag { font-size: 11px; font-weight: 500; background: var(--warning-bg); color: var(--warning-text); padding: 3px 9px; border-radius: 20px; border: 1px solid #f0d080; }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <div class="topbar">
+    <div>
+      <div class="brand">FounderOS · Stefan León</div>
+      <div class="today-date" id="date-label"></div>
+    </div>
+    <div class="conn-status">
+      <div class="dot" id="conn-dot"></div>
+      <span class="conn-label" id="conn-label">Not connected</span>
+      <button class="btn btn-primary btn-sm" id="auth-btn" onclick="handleAuth()">Connect Calendar</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('morning')">Morning snapshot</button>
+    <button class="tab" onclick="switchTab('eod')">End-of-day report</button>
+  </div>
+
+  <!-- MORNING TAB -->
+  <div id="tab-morning">
+    <div id="warn-area"></div>
+    <div class="row-between">
+      <div class="sec-label">Today's calls</div>
+      <span class="snap-tag">Read-only snapshot</span>
+    </div>
+    <div id="morning-list"><div class="empty">Connect Google Calendar to load today's calls.</div></div>
+    <div class="action-row">
+      <button class="btn btn-sm" id="refresh-btn" onclick="loadEvents()" style="display:none;">Refresh</button>
+      <button class="btn btn-sm btn-primary" id="push-btn" onclick="pushToEOD()" style="display:none;">Use for EOD report →</button>
+    </div>
+  </div>
+
+  <!-- EOD TAB -->
+  <div id="tab-eod" style="display:none;">
+    <div class="stats">
+      <div class="stat"><div class="stat-n" id="s-total">0</div><div class="stat-l">Total</div></div>
+      <div class="stat"><div class="stat-n" id="s-c1">0</div><div class="stat-l">Call 1s</div></div>
+      <div class="stat"><div class="stat-n" id="s-c2">0</div><div class="stat-l">Follow-ups</div></div>
+      <div class="stat"><div class="stat-n" id="s-ns">0</div><div class="stat-l">No shows</div></div>
+    </div>
+
+    <div class="row-between">
+      <div class="sec-label" style="margin-bottom:0;">Log outcomes</div>
+      <button class="link-btn" onclick="addManual()">+ Add manually</button>
+    </div>
+    <div id="eod-list"><div class="empty">Push calls from morning snapshot or add manually.</div></div>
+
+    <div class="divider"></div>
+
+    <div class="report-actions">
+      <div class="sec-label" style="margin-bottom:0;">Report output</div>
+      <button class="btn btn-sm" onclick="copyReport()">Copy</button>
+      <span class="copied" id="copied-msg">Copied!</span>
+    </div>
+    <div class="report-box" id="report-out">Fill in outcomes above to generate your report.</div>
+  </div>
+
+</div>
+
+<script>
+const CLIENT_ID = '458667376247-qr2g9rcj25fatmmdlvd49r4ig52nl3ka.apps.googleusercontent.com';
+const SCOPE = 'https://www.googleapis.com/auth/calendar.readonly';
+
+let snapshotCalls = [];
+let eodCalls = [];
+let token = null;
+let tokenClient = null;
+let gisLoaded = false;
+
+document.getElementById('date-label').textContent = new Date().toLocaleDateString('en-US', {
+  weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
+});
+
+function loadGIS() {
+  if (gisLoaded) return Promise.resolve();
+  return new Promise(res => {
+    const s = document.createElement('script');
+    s.src = 'https://accounts.google.com/gsi/client';
+    s.onload = () => { gisLoaded = true; res(); };
+    document.head.appendChild(s);
+  });
+}
+
+async function handleAuth() {
+  await loadGIS();
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID,
+    scope: SCOPE,
+    callback: async (resp) => {
+      if (resp.error) {
+        showWarn('Auth error: ' + resp.error + '. Make sure this file\'s origin is in your Google Cloud authorized origins.');
+        return;
+      }
+      token = resp.access_token;
+      document.getElementById('conn-dot').classList.add('live');
+      document.getElementById('conn-label').textContent = 'Connected';
+      document.getElementById('auth-btn').textContent = 'Reconnect';
+      document.getElementById('refresh-btn').style.display = 'inline-block';
+      document.getElementById('push-btn').style.display = 'inline-block';
+      await loadEvents();
+    }
+  });
+  tokenClient.requestAccessToken({ prompt: 'consent' });
+}
+
+async function loadEvents() {
+  if (!token) return;
+  clearWarn();
+  document.getElementById('morning-list').innerHTML = '<div class="empty">Loading...</div>';
+
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0).toISOString();
+  const end   = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59).toISOString();
+  const url = `https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${encodeURIComponent(start)}&timeMax=${encodeURIComponent(end)}&singleEvents=true&orderBy=startTime&maxResults=50`;
+
+  try {
+    const res = await fetch(url, { headers: { Authorization: 'Bearer ' + token } });
+    if (!res.ok) { showWarn('Calendar error ' + res.status + ' — try reconnecting.'); return; }
+    const data = await res.json();
+    const items = (data.items || []).filter(e => e.status !== 'cancelled');
+    snapshotCalls = items.map(parseEvent);
+    renderMorning();
+  } catch (e) {
+    showWarn('Network error: ' + e.message);
+  }
+}
+
+function parseEvent(e) {
+  const attendees = (e.attendees || []).filter(a => !a.self);
+  let name = '';
+  if (attendees.length > 0) {
+    const a = attendees[0];
+    name = (a.displayName && !a.displayName.includes('@'))
+      ? a.displayName
+      : a.email.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  }
+  if (!name) name = e.summary || 'Unknown';
+
+  const colorId = String(e.colorId || '');
+  const c1Colors = ['5', '2', '4', '10'];
+  const c2Colors = ['1', '7', '9', '6'];
+  const type = c1Colors.includes(colorId) ? 'c1' : c2Colors.includes(colorId) ? 'c2' : 'unknown';
+
+  let time = '';
+  if (e.start && e.start.dateTime) {
+    const s = new Date(e.start.dateTime);
+    const en = new Date(e.end.dateTime);
+    time = s.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+         + ' – ' + en.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  }
+
+  return { id: e.id, name, title: e.summary || '', time, type, outcome: '', notes: '', manual: false };
+}
+
+function renderMorning() {
+  const el = document.getElementById('morning-list');
+  if (!snapshotCalls.length) {
+    el.innerHTML = '<div class="empty">No events found today.</div>';
+    return;
+  }
+  el.innerHTML = snapshotCalls.map(c => `
+    <div class="call-card">
+      <div class="call-inner">
+        <div class="type-dot ${c.type === 'c1' ? 'dot-c1' : c.type === 'c2' ? 'dot-c2' : 'dot-unknown'}"></div>
+        <div class="call-body">
+          <div class="call-name">${esc(c.name)}</div>
+          <div class="call-time">${esc(c.time)}${c.title && c.title !== c.name ? ' · ' + esc(c.title) : ''}</div>
+          <span class="pill ${c.type === 'c1' ? 'pill-c1' : c.type === 'c2' ? 'pill-c2' : 'pill-unknown'}">
+            ${c.type === 'c1' ? 'Call 1' : c.type === 'c2' ? 'Follow-up' : 'Untagged'}
+          </span>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function pushToEOD() {
+  eodCalls = snapshotCalls.map(c => ({ ...c }));
+  switchTab('eod');
+}
+
+function renderEOD() {
+  updateStats();
+  const el = document.getElementById('eod-list');
+  if (!eodCalls.length) {
+    el.innerHTML = '<div class="empty">Push calls from morning snapshot or add manually.</div>';
+    generateReport(); return;
+  }
+  el.innerHTML = eodCalls.map((c, i) => `
+    <div class="call-card">
+      <div class="call-inner">
+        <div class="type-dot ${c.type === 'c1' ? 'dot-c1' : c.type === 'c2' ? 'dot-c2' : 'dot-unknown'}" style="margin-top:8px;"></div>
+        <div class="call-body">
+          <input class="name-input" value="${esc(c.name)}" placeholder="Prospect name" oninput="upd(${i},'name',this.value)" />
+          <div class="call-time">${esc(c.time)}</div>
+          <select class="outcome" onchange="upd(${i},'outcome',this.value)">
+            <option value="">— Select outcome —</option>
+            ${['Closed','Soft commit','Follow-up scheduled','No show','Rescheduled','DQ','Nurturing','Discovery complete','Pitched'].map(o =>
+              `<option value="${o}" ${c.outcome===o?'selected':''}>${o}</option>`).join('')}
+          </select>
+          <textarea class="note" rows="2" placeholder="One-liner note..." oninput="upd(${i},'notes',this.value)">${esc(c.notes)}</textarea>
+        </div>
+      </div>
+    </div>`).join('');
+  generateReport();
+}
+
+function upd(i, f, v) { eodCalls[i][f] = v; updateStats(); generateReport(); }
+
+function updateStats() {
+  document.getElementById('s-total').textContent = eodCalls.length;
+  document.getElementById('s-c1').textContent = eodCalls.filter(c => c.type === 'c1').length;
+  document.getElementById('s-c2').textContent = eodCalls.filter(c => c.type === 'c2').length;
+  document.getElementById('s-ns').textContent = eodCalls.filter(c => c.outcome === 'No show').length;
+}
+
+function addManual() {
+  eodCalls.push({ id: 'M' + Date.now(), name: '', title: '', time: '', type: 'unknown', outcome: '', notes: '', manual: true });
+  renderEOD();
+}
+
+function generateReport() {
+  const box = document.getElementById('report-out');
+  if (!eodCalls.length) { box.textContent = 'No calls to report.'; return; }
+  const lines = eodCalls.map(c => {
+    const name = c.name || '[Name]';
+    const out = c.outcome || '[Outcome]';
+    return c.notes ? `${name} - ${out} - ${c.notes}` : `${name} - ${out}`;
+  });
+  box.textContent = 'Conversation Notes\n' + lines.join('\n');
+}
+
+function copyReport() {
+  navigator.clipboard.writeText(document.getElementById('report-out').textContent).then(() => {
+    const m = document.getElementById('copied-msg');
+    m.style.opacity = '1';
+    setTimeout(() => m.style.opacity = '0', 2000);
+  });
+}
+
+function switchTab(t) {
+  document.getElementById('tab-morning').style.display = t === 'morning' ? 'block' : 'none';
+  document.getElementById('tab-eod').style.display = t === 'eod' ? 'block' : 'none';
+  document.querySelectorAll('.tab').forEach((el, i) => el.classList.toggle('active', (i===0&&t==='morning')||(i===1&&t==='eod')));
+  if (t === 'eod') renderEOD();
+}
+
+function showWarn(msg) { document.getElementById('warn-area').innerHTML = `<div class="warn">${msg}</div>`; }
+function clearWarn() { document.getElementById('warn-area').innerHTML = ''; }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+</script>
+</body>
+</html>
