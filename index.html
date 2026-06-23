@@ -130,8 +130,8 @@ textarea.note:focus { outline: none; border-color: var(--c2); }
       <div class="stat"><div class="stat-n c1" id="ms-c1">0</div><div class="stat-l">Call 1s scheduled</div></div>
       <div class="stat"><div class="stat-n c2" id="ms-c2">0</div><div class="stat-l">Follow-ups scheduled</div></div>
       <div class="stat"><div class="stat-n slots" id="ms-total">0</div><div class="stat-l">Total call slots</div></div>
-      <div class="stat"><div class="stat-n slots" id="ms-morn">0</div><div class="stat-l">Morning slots open (9–3pm)</div></div>
-      <div class="stat"><div class="stat-n slots" id="ms-eve">0</div><div class="stat-l">Evening slots open (5–8pm)</div></div>
+      <div class="stat"><div class="stat-n slots" id="ms-morn">0</div><div class="stat-l">Open morning slots (9–3pm)</div></div>
+      <div class="stat"><div class="stat-n slots" id="ms-eve">0</div><div class="stat-l">Open evening slots (5–8pm)</div></div>
     </div>
 
     <div class="row-between">
@@ -257,6 +257,7 @@ async function autoSnapshot() {
     if (!eodCalls.length) {
       eodCalls = snapshotCalls.map(c => Object.assign({}, c));
     }
+    updateSummaryPanel();
   } catch(e) { showWarn('Error loading calendar: ' + e.message); }
 }
 
@@ -269,6 +270,8 @@ async function manualRefresh() {
     sessionStorage.setItem(SNAP_KEY, JSON.stringify(snapshotCalls));
     renderMorning();
     updateMorningStats();
+    eodCalls = snapshotCalls.map(c => Object.assign({}, c));
+    updateSummaryPanel();
   } catch(e) { showWarn('Refresh error: ' + e.message); }
 }
 
@@ -457,16 +460,24 @@ function resolveDropped(i, outcome) {
 
 function updateSummaryPanel() {
   const snap = snapshotCalls;
+  // Scheduled = all prospect calls (external attendees), regardless of outcome
   const c1s = snap.filter(c => c.type === 'c1').length;
   const c2s = snap.filter(c => c.type === 'c2').length;
-  const liveC1 = eodCalls.filter(c => c.type === 'c1' && c.outcome && c.outcome !== 'No show' && c.outcome !== 'Rescheduled' && c.outcome !== 'Reschedule pending' && c.outcome !== 'Cancelled').length;
-  const liveC2 = eodCalls.filter(c => c.type === 'c2' && c.outcome && c.outcome !== 'No show' && c.outcome !== 'Rescheduled' && c.outcome !== 'Reschedule pending' && c.outcome !== 'Cancelled').length;
+  // Taken = showed up (outcome exists and is not a miss)
+  const missOutcomes = ['No show', 'Rescheduled', 'Reschedule pending', 'Cancelled'];
+  const liveC1 = eodCalls.filter(c => c.type === 'c1' && c.outcome && !missOutcomes.includes(c.outcome)).length;
+  const liveC2 = eodCalls.filter(c => c.type === 'c2' && c.outcome && !missOutcomes.includes(c.outcome)).length;
   const ns = eodCalls.filter(c => c.outcome === 'No show').length;
+  // Slots: count from allEventsToday (all calendar events block slots)
+  const mornOpen = allEventsToday.length ? countOpenSlots(allEventsToday, 9, 15) : '—';
+  const eveOpen = allEventsToday.length ? countOpenSlots(allEventsToday, 17, 20) : '—';
   document.getElementById('ep-c1s').textContent = c1s;
   document.getElementById('ep-c2s').textContent = c2s;
   document.getElementById('ep-c1l').textContent = liveC1;
   document.getElementById('ep-c2l').textContent = liveC2;
   document.getElementById('ep-ns').textContent = ns;
+  document.getElementById('ep-morn').textContent = mornOpen;
+  document.getElementById('ep-eve').textContent = eveOpen;
   document.getElementById('summary-panel').style.display = 'block';
 }
 
