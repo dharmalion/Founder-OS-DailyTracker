@@ -183,7 +183,7 @@ textarea.note:focus { outline: none; border-color: var(--c2); }
 <script>
 const CLIENT_ID = '458667376247-qr2g9rcj25fatmmdlvd49r4ig52nl3ka.apps.googleusercontent.com';
 const SCOPE = 'https://www.googleapis.com/auth/calendar.readonly';
-const SNAP_KEY = 'fos_snapshot_' + new Date().toDateString();
+const SNAP_KEY = 'fos_snapshot_v3_' + new Date().toDateString();
 
 let snapshotCalls = [];
 let eodCalls = [];
@@ -276,10 +276,12 @@ async function manualRefresh() {
 }
 
 function shouldInclude(e) {
+  // No attendees = solo/internal event, exclude
+  if (!e.attendees || e.attendees.length === 0) return false;
   // Exclude Sage (colorId 2)
   if (String(e.colorId || '') === '2') return false;
   // Must have at least one external attendee (not @founderos.com and not self)
-  const external = (e.attendees || []).filter(a => !a.self && !a.email.endsWith('@founderos.com'));
+  const external = e.attendees.filter(a => !a.self && a.email && !a.email.endsWith('@founderos.com'));
   return external.length > 0;
 }
 
@@ -300,8 +302,9 @@ function parseEvent(e) {
 
   let type;
   if (selfRsvp === 'tentative') type = 'maybe';
-  else if (colorId === '9') type = 'c2';
-  else type = 'c1'; // all other colors including default = Call 1 (Sage filtered by shouldInclude)
+  else if (colorId === '9') type = 'c2';  // Blueberry = Follow-up
+  else if (colorId === '') type = 'c1';   // Calendar default = Call 1
+  else type = 'c1';                        // Any other color also treated as Call 1 (Sage already excluded)
 
   let startDt = null, endDt = null, time = '';
   if (e.start && e.start.dateTime) {
