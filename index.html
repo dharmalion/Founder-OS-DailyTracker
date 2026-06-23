@@ -381,10 +381,7 @@ function toggleInclude(i, val) {
   updateSelectHint();
 }
 
-function updateSelectHint() {
-  const n = snapshotCalls.filter(c => c.included).length;
-  document.getElementById('select-hint').textContent = n + ' of ' + snapshotCalls.length + ' selected';
-}
+function updateSelectHint() { /* removed - no checkbox UI */ }
 
 function pushToEOD() {
   eodCalls = snapshotCalls.map(c => Object.assign({}, c));
