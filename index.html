@@ -273,6 +273,10 @@ function shouldInclude(e) {
   if (!e.attendees || e.attendees.length === 0) return false;
   // Exclude Sage (colorId 2)
   if (String(e.colorId || '') === '2') return false;
+  // Exclude known internal/non-sales event keywords
+  const title = (e.summary || '').toLowerCase();
+  const blocked = ['block','training','workshop','review','standup','1:1','sync','team','admin','lunch','break','authenticity machine'];
+  if (blocked.some(b => title.includes(b))) return false;
   // Must have at least one external attendee (not @founderos.com and not self)
   const external = e.attendees.filter(a => !a.self && a.email && !a.email.endsWith('@founderos.com'));
   return external.length > 0;
