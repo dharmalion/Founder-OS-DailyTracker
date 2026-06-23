@@ -141,8 +141,6 @@ textarea.note:focus { outline: none; border-color: var(--c2); }
     <div id="morning-list"><div class="empty">Connect Google Calendar to load today's calls.</div></div>
     <div class="action-row">
       <button class="btn btn-sm" id="refresh-btn" onclick="manualRefresh()" style="display:none;">Refresh</button>
-      <button class="btn btn-sm btn-primary" id="push-btn" onclick="pushToEOD()" style="display:none;">Use checked for EOD report</button>
-      <span class="select-hint" id="select-hint" style="display:none;"></span>
     </div>
   </div>
 
@@ -220,8 +218,6 @@ async function handleAuth() {
       document.getElementById('conn-lbl').textContent = 'Connected';
       document.getElementById('auth-btn').textContent = 'Reconnect';
       document.getElementById('refresh-btn').style.display = 'inline-block';
-      document.getElementById('push-btn').style.display = 'inline-block';
-      document.getElementById('select-hint').style.display = 'inline';
       await autoSnapshot();
     }
   });
@@ -257,6 +253,10 @@ async function autoSnapshot() {
     }
     renderMorning();
     updateMorningStats();
+    // Auto-populate EOD from snapshot
+    if (!eodCalls.length) {
+      eodCalls = snapshotCalls.map(c => Object.assign({}, c));
+    }
   } catch(e) { showWarn('Error loading calendar: ' + e.message); }
 }
 
@@ -273,10 +273,11 @@ async function manualRefresh() {
 }
 
 function shouldInclude(e) {
-  // Default include for sales-looking events, exclude obvious non-sales
-  const title = (e.summary || '').toLowerCase();
-  const blocked = ['block','training','workshop','lunch','break','admin','review','team','standup','1:1','sync'];
-  return !blocked.some(b => title.includes(b));
+  // Exclude Sage (colorId 2)
+  if (String(e.colorId || '') === '2') return false;
+  // Must have at least one external attendee (not @founderos.com and not self)
+  const external = (e.attendees || []).filter(a => !a.self && !a.email.endsWith('@founderos.com'));
+  return external.length > 0;
 }
 
 function parseEvent(e) {
@@ -296,9 +297,8 @@ function parseEvent(e) {
 
   let type;
   if (selfRsvp === 'tentative') type = 'maybe';
-  else if (colorId === '') type = 'c1';
   else if (colorId === '9') type = 'c2';
-  else type = 'unknown';
+  else type = 'c1'; // all other colors including default = Call 1 (Sage filtered by shouldInclude)
 
   let startDt = null, endDt = null, time = '';
   if (e.start && e.start.dateTime) {
@@ -340,7 +340,7 @@ function countOpenSlots(events, fromH, toH) {
 }
 
 function updateMorningStats() {
-  const salesCalls = snapshotCalls.filter(c => c.type !== 'unknown');
+  const salesCalls = snapshotCalls; // already filtered to external attendees only
   const c1 = salesCalls.filter(c => c.type === 'c1').length;
   const c2 = salesCalls.filter(c => c.type === 'c2').length;
   const total = salesCalls.length;
@@ -359,13 +359,12 @@ function renderMorning() {
   if (!snapshotCalls.length) { el.innerHTML = '<div class="empty">No events found today.</div>'; return; }
   updateSelectHint();
   el.innerHTML = snapshotCalls.map((c, i) =>
-    '<div class="call-card ' + (c.included ? '' : 'excluded') + '" id="mc-' + i + '">' +
+    '<div class="call-card">' +
     '<div class="call-inner">' +
-    '<input type="checkbox" class="call-check" ' + (c.included ? 'checked' : '') + ' onchange="toggleInclude(' + i + ',this.checked)" />' +
     '<div class="type-dot ' + dotClass(c.type) + '"></div>' +
     '<div class="call-body">' +
     '<div class="call-name">' + esc(c.name) + '</div>' +
-    '<div class="call-time">' + esc(c.time) + (c.title && c.title !== c.name ? ' · ' + esc(c.title) : '') + '</div>' +
+    '<div class="call-time">' + esc(c.time) + '</div>' +
     '<span class="pill ' + pillClass(c.type) + '">' + typeLabel(c.type) + '</span>' +
     (c.selfRsvp === 'tentative' ? ' <span class="pill pill-maybe">Reschedule pending</span>' : '') +
     '</div></div></div>'
@@ -385,7 +384,7 @@ function updateSelectHint() {
 }
 
 function pushToEOD() {
-  eodCalls = snapshotCalls.filter(c => c.included).map(c => Object.assign({}, c));
+  eodCalls = snapshotCalls.map(c => Object.assign({}, c));
   switchTab('eod');
 }
 
@@ -400,8 +399,7 @@ async function refreshEOD() {
     const freshIds = new Set(fresh.map(c => c.id));
 
     // Find dropped
-    const snapshotIncluded = snapshotCalls.filter(c => c.included);
-    droppedPending = snapshotIncluded.filter(c => !freshIds.has(c.id) && !eodCalls.find(e => e.id === c.id && e.outcome));
+    droppedPending = snapshotCalls.filter(c => !freshIds.has(c.id) && !eodCalls.find(e => e.id === c.id && e.outcome));
 
     // Update existing EOD entries
     eodCalls = eodCalls.map(c => {
@@ -458,7 +456,7 @@ function resolveDropped(i, outcome) {
 }
 
 function updateSummaryPanel() {
-  const snap = snapshotCalls.filter(c => c.included);
+  const snap = snapshotCalls;
   const c1s = snap.filter(c => c.type === 'c1').length;
   const c2s = snap.filter(c => c.type === 'c2').length;
   const liveC1 = eodCalls.filter(c => c.type === 'c1' && c.outcome && c.outcome !== 'No show' && c.outcome !== 'Rescheduled' && c.outcome !== 'Reschedule pending' && c.outcome !== 'Cancelled').length;
